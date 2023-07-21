@@ -9,7 +9,7 @@
 
     <groupId>fr.soleil.lib.Lima.Camera</groupId>
     <artifactId>LimaBasler-${aol}-shared-${mode}</artifactId>
-    <version>1.6.2</version>
+    <version>1.6.3</version>
 
     <packaging>nar</packaging>
     <name>LimaBasler</name>
