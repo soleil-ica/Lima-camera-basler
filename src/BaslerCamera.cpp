@@ -381,6 +381,7 @@ void Camera::startAcq()
 void Camera::_startAcq()
 {
   DEB_MEMBER_FUNCT();
+  DEB_TRACE() << "Start acquisition";
   if (m_nb_frames)
     Camera_->StartGrabbing(m_nb_frames);
   else
@@ -470,12 +471,12 @@ void Camera::_AcqThread::threadFunction()
     {
         while(m_cam.m_wait_flag && !m_cam.m_quit)
         {
-            DEB_TRACE() << "Wait";
+            //DEB_TRACE() << "Wait";
             m_cam.m_thread_running = false;
             m_cam.m_cond.broadcast();
             m_cam.m_cond.wait();
 	}
-	DEB_TRACE() << "Run";
+	//DEB_TRACE() << "Run";
 	m_cam.m_thread_running = true;
 	if(m_cam.m_quit) return;
         
@@ -669,8 +670,7 @@ void Camera::setImageType(ImageType type)
         }
         else
         {
-            DEB_TRACE() << "PixelFormat is Not Available or/and Not Writable !";         
-            break;
+            DEB_TRACE() << "PixelFormat is Not Available or/and Not Writable !";
         }
     }
     catch (Pylon::GenericException &e)
@@ -1018,7 +1018,8 @@ void Camera::getExposureTimeRange(double& min_expo, double& max_expo)
                 min_expo = Camera_->ExposureTimeAbs.GetMin()*1e-6;
                 max_expo = Camera_->ExposureTimeAbs.GetMax()*1e-6;
             }
-            
+            DEB_TRACE() << "min_expo = " << min_expo << " (s)";
+            DEB_TRACE() << "max_expo = " << max_expo << " (s)";
         }
     }
     catch (Pylon::GenericException &e)
@@ -1580,6 +1581,41 @@ void Camera::getTemperature(double& temperature)
 //-----------------------------------------------------
 //
 //-----------------------------------------------------
+void Camera::setExposureMode(BslExposureTimeModeEnums e)
+{
+    DEB_MEMBER_FUNCT();
+    DEB_PARAM() << DEB_VAR1(e);
+    try
+    {
+        Camera_->BslExposureTimeMode.SetValue(e);
+    }
+    catch (Pylon::GenericException &e)
+    {
+        DEB_WARNING() << e.GetDescription();
+    }
+}
+
+//-----------------------------------------------------
+//
+//-----------------------------------------------------
+void Camera::getExposureMode(BslExposureTimeModeEnums& expTimeMode) const
+{
+    DEB_MEMBER_FUNCT();
+    try
+    {
+        expTimeMode =  Camera_->BslExposureTimeMode.GetValue();
+    }
+    catch (Pylon::GenericException &e)
+    {
+        DEB_WARNING() << e.GetDescription();
+    }
+
+    DEB_RETURN() << DEB_VAR1(expTimeMode);
+}
+
+//-----------------------------------------------------
+//
+//-----------------------------------------------------
 void Camera::setAutoGain(bool auto_gain)
 {
     DEB_MEMBER_FUNCT();
@@ -1666,9 +1702,9 @@ void Camera::setGain(double gain)
             raw_gain = int((high_limit - low_limit) * gain + low_limit);
             Camera_->GainRaw.SetValue(raw_gain);
         }
-        DEB_TRACE() << "low_limit   = " << low_limit;
-        DEB_TRACE() << "high_limit = " << high_limit;
-        DEB_TRACE() << "raw_gain    = " << raw_gain;
+        //DEB_TRACE() << "low_limit   = " << low_limit;
+        //DEB_TRACE() << "high_limit = " << high_limit;
+        //DEB_TRACE() << "raw_gain    = " << raw_gain;
     }
     catch (Pylon::GenericException &e)
     {
@@ -1702,9 +1738,9 @@ void Camera::getGain(double& gain)
 	        high_limit = Camera_->GainRaw.GetMax();
         }
         
-        DEB_TRACE() << "low_limit = " << low_limit;
-        DEB_TRACE() << "high_limit = " << high_limit;
-        DEB_TRACE() << "raw_gain    = " << raw_gain;
+        //DEB_TRACE() << "low_limit = " << low_limit;
+        //DEB_TRACE() << "high_limit = " << high_limit;
+        //DEB_TRACE() << "raw_gain    = " << raw_gain;
         gain = double(raw_gain - low_limit)/double(high_limit - low_limit);
 
     }

@@ -164,6 +164,9 @@ class LIBBASLER_API Camera
     void setTimeout(int TO);
     void reset();
 
+    void setExposureMode(BslExposureTimeModeEnums e);
+    void getExposureMode(BslExposureTimeModeEnums& e) const;
+
     bool isGainAvailable() const;
     void setGain(double gain);
     void getGain(double& gain);

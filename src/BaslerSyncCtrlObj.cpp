@@ -69,6 +69,7 @@ void SyncCtrlObj::getTrigMode(TrigMode &trig_mode)
 
 void SyncCtrlObj::setExpTime(double exp_time)
 {
+  updateValidRanges();    
   m_cam.setExpTime(exp_time);
 }
 
@@ -79,6 +80,7 @@ void SyncCtrlObj::getExpTime(double &exp_time)
 
 void SyncCtrlObj::setLatTime(double  lat_time)
 {
+  updateValidRanges();
   m_cam.setLatTime(lat_time);
 }
 
@@ -110,6 +112,22 @@ void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
   m_cam.getLatTimeRange(min_time, max_time);
   valid_ranges.min_lat_time = min_time;
   valid_ranges.max_lat_time = max_time;
+  
+}
+
+//-----------------------------------------------------
+// manages the update of valid ranes (only if needed)
+//-----------------------------------------------------
+void SyncCtrlObj::updateValidRanges()
+{
+	DEB_MEMBER_FUNCT();
+
+    ValidRangesType valid_ranges;
+    getValidRanges(valid_ranges);
+
+    // managing the update of valid ranges (only if needed)
+    validRangesChanged(valid_ranges); // calling ... callback
+    DEB_TRACE() << ": callback - new valid_ranges: " << DEB_VAR1(valid_ranges);
 }
 
 bool SyncCtrlObj::checkAutoExposureMode(HwSyncCtrlObj::AutoExposureMode mode) const

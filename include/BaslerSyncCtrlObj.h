@@ -55,6 +55,7 @@ namespace lima
       virtual void getNbHwFrames(int& nb_frames);
 
       virtual void getValidRanges(ValidRangesType& valid_ranges);
+      virtual void updateValidRanges();
 
       void startAcq();
       void stopAcq(bool clearQueue = true);
