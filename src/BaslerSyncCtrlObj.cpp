@@ -116,7 +116,7 @@ void SyncCtrlObj::getValidRanges(ValidRangesType& valid_ranges)
 }
 
 //-----------------------------------------------------
-// manages the update of valid ranes (only if needed)
+// manages the update of valid ranges (only if needed)
 //-----------------------------------------------------
 void SyncCtrlObj::updateValidRanges()
 {
@@ -127,7 +127,7 @@ void SyncCtrlObj::updateValidRanges()
 
     // managing the update of valid ranges (only if needed)
     validRangesChanged(valid_ranges); // calling ... callback
-    DEB_TRACE() << ": callback - new valid_ranges: " << DEB_VAR1(valid_ranges);
+    DEB_TRACE() << "callback - new valid_ranges: " << DEB_VAR1(valid_ranges);
 }
 
 bool SyncCtrlObj::checkAutoExposureMode(HwSyncCtrlObj::AutoExposureMode mode) const

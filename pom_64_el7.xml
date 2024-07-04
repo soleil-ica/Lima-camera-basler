@@ -52,6 +52,8 @@
                         <!-- define less verbose mode for gcc-->
                         <options>
                             <option>-w</option>
+                            <option>-fpermissive</option>
+                            
                         </options>
                     </cpp>
 					

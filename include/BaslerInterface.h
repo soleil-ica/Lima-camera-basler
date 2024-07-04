@@ -24,6 +24,7 @@
 
 #include "BaslerCompatibility.h"
 #include "lima/HwInterface.h"
+#include "BaslerSyncCtrlObj.h"
 //#include "lima/HwEventCtrlObj.h"
 
 
@@ -57,11 +58,16 @@ namespace lima
 
       Camera& getCamera(){ return m_cam; }
       const Camera& getCamera() const { return m_cam; }
+          //! get the sync control object to access it directly from client
+    SyncCtrlObj& getSyncCtrl()
+    {
+        return m_sync;
+    }
     private:
       Camera&		m_cam;
       CapList		m_cap_list;
       DetInfoCtrlObj*	m_det_info;
-      SyncCtrlObj*	m_sync;
+      SyncCtrlObj	m_sync;
       RoiCtrlObj*	m_roi;
       BinCtrlObj*	m_bin;
       VideoCtrlObj*     m_video;

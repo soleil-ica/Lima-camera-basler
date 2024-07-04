@@ -1588,6 +1588,7 @@ void Camera::setExposureMode(BslExposureTimeModeEnums e)
     try
     {
         Camera_->BslExposureTimeMode.SetValue(e);
+        
     }
     catch (Pylon::GenericException &e)
     {

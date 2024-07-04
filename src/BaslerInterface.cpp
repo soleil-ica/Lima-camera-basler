@@ -32,11 +32,11 @@ using namespace lima::Basler;
 
 
 Interface::Interface(Camera& cam,bool force_video_mode) :
-  m_cam(cam)
+  m_cam(cam),
+  m_sync(cam)
 {
   DEB_CONSTRUCTOR();
   m_det_info = new DetInfoCtrlObj(cam);
-  m_sync = new SyncCtrlObj(cam);
   m_roi = new RoiCtrlObj(cam);
   m_bin = new BinCtrlObj(cam);
   bool has_video_capability;
@@ -60,7 +60,7 @@ Interface::~Interface()
 {
   DEB_DESTRUCTOR();
   delete m_det_info;
-  delete m_sync;
+  
   delete m_roi;
   delete m_bin;
   delete m_video;
@@ -81,8 +81,9 @@ void Interface::getCapList(CapList &cap_list) const
       cap_list.push_back(HwCap(buffer));
     }
 
-  cap_list.push_back(HwCap(m_sync));
-
+	HwSyncCtrlObj *sync = &m_sync;
+    cap_list.push_back(HwCap(sync));
+    
   if(m_cam.isRoiAvailable())
     cap_list.push_back(HwCap(m_roi));
 
