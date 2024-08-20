@@ -209,6 +209,7 @@ class LIBBASLER_API Camera
 
     bool isBandWidthAssigned() const;
     
+    void getDeviceUserID(std::string& userID);
  private:
     enum BufferMode {TmpBuffer, SoftBuffer};
     class _AcqThread;

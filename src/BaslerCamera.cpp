@@ -350,26 +350,27 @@ void Camera::startAcq()
     DEB_MEMBER_FUNCT();
     try
     {
-	if(!m_acq_started)
-	  {
-	    if(m_video)
-	      m_video->getBuffer().setStartTimestamp(Timestamp::now());
-	    else
-	      m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
-	  }
-	// start acquisition at first image
-	// code moved from prepareAcq(), otherwise with color camera
-	// CtVideo::_prepareAcq() which calls stopAcq() will kill the acquisition 
-	if(m_trigger_mode == IntTrigMult)
-	  {
-	    if (!m_acq_started)
-	      _startAcq();
+        if(!m_acq_started)
+        {
+            if(m_video)
+                m_video->getBuffer().setStartTimestamp(Timestamp::now());
+            else
+                m_buffer_ctrl_obj.getBuffer().setStartTimestamp(Timestamp::now());
+        }
+        // start acquisition at first image
+        // code moved from prepareAcq(), otherwise with color camera
+        // CtVideo::_prepareAcq() which calls stopAcq() will kill the acquisition 
+        if(m_trigger_mode == IntTrigMult)
+        {
+            if (!m_acq_started)
+                _startAcq();
 
-	    this->Camera_->TriggerSoftware.Execute();
-	  }
-	else {	  
-	  _startAcq();
-	}
+            this->Camera_->TriggerSoftware.Execute();
+        }
+        else 
+        {	  
+          _startAcq();
+        }
     }
     catch (GenICam::GenericException &e)
     {
@@ -876,7 +877,6 @@ void Camera::getTrigActivation(TrigActivation& activation) const
 void Camera::setTrigDelay(unsigned int delay)
 {
     DEB_MEMBER_FUNCT();
-    DEB_TRACE()<<"setTrigDelay : "<<delay;
     try
     {
         Camera_->TriggerDelay.SetValue(delay);
@@ -1043,13 +1043,16 @@ void Camera::getExposureTimeRange(double& min_expo, double& max_expo)
         }
         else
         {
-	  if (IsAvailable(Camera_->ExposureTime) || m_is_usb) {
+          if (IsAvailable(Camera_->ExposureTime) || m_is_usb) 
+          {
                 min_expo = Camera_->ExposureTime.GetMin()*1e-6;
                 max_expo = Camera_->ExposureTime.GetMax()*1e-6;
-            } else {
+          }
+          else 
+          {
                 min_expo = Camera_->ExposureTimeAbs.GetMin()*1e-6;
                 max_expo = Camera_->ExposureTimeAbs.GetMax()*1e-6;
-            }
+          }
             DEB_TRACE() << "min_expo = " << min_expo << " (s)";
             DEB_TRACE() << "max_expo = " << max_expo << " (s)";
         }
@@ -1657,10 +1660,10 @@ void Camera::setAutoGain(bool auto_gain)
     {
         if (GenApi::IsAvailable(Camera_->GainAuto) && GenApi::IsAvailable(Camera_->GainSelector))
         {
+            Camera_->GainSelector.SetValue(GainSelector_All);
             if (!auto_gain)
             {
-                Camera_->GainAuto.SetValue(GainAuto_Off);
-                Camera_->GainSelector.SetValue(GainSelector_All);
+                Camera_->GainAuto.SetValue(GainAuto_Off);                
             }
             else
             {
@@ -1685,6 +1688,19 @@ void Camera::getAutoGain(bool& auto_gain) const
         if (GenApi::IsAvailable(Camera_->GainAuto))
         {
             auto_gain = Camera_->GainAuto.GetValue();
+            GainAutoEnums e = Camera_->GainAuto.GetValue();
+            if(e == GainAuto_Continuous)
+            {
+                auto_gain = true;
+            }
+            else if(e == GainAuto_Once)
+            {             
+                auto_gain = true;
+            }
+            else if(e == GainAuto_Off)
+            {                
+                auto_gain = false;
+            }
         }
         else
         {
@@ -1911,6 +1927,24 @@ void Camera::reset()
     {
         // Error handling
         THROW_HW_ERROR(Error) << e.GetDescription();
+    }    
+}
+
+
+//---------------------------
+//- Camera::getDeviceUserID()
+//---------------------------
+void Camera::getDeviceUserID(std::string& userID)
+{
+    DEB_MEMBER_FUNCT();
+    try
+    {
+        GenICam::gcstring s = Camera_->DeviceUserID.GetValue();
+        userID = s;
+    }
+    catch (Pylon::GenericException &e)
+    {
+        DEB_WARNING() << e.GetDescription();
     }    
 }
 
