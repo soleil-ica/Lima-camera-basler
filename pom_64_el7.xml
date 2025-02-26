@@ -9,7 +9,7 @@
 
     <groupId>fr.soleil.lib.Lima.Camera</groupId>
     <artifactId>LimaBasler-amd64-Linux-gcc-el7-shared-${mode}</artifactId>
-    <version>1.6.2-el7-SNAPSHOT</version>
+    <version>1.6.3-pylon6</version>
 
     <packaging>nar</packaging>
     <name>LimaBasler</name>
