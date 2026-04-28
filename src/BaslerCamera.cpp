@@ -109,7 +109,8 @@ Camera::Camera(const std::string& camera_id,int packet_size,int receive_priority
         Camera_(NULL),
         m_receive_priority(receive_priority),
 	    m_video_flag_mode(false),
-	    m_video(NULL)
+	    m_video(NULL),
+	    m_sync(NULL)
 {
     DEB_CONSTRUCTOR();
     m_camera_id = camera_id;
@@ -696,6 +697,12 @@ void Camera::setImageType(ImageType type)
                 default:
                     THROW_HW_ERROR(NotSupported) << "Cannot change the pixel format of the camera !";
                     break;
+
+            }
+
+            if (m_sync)
+            {
+                m_sync->updateValidRanges();
             }
         }
         else

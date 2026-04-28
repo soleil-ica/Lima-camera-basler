@@ -29,6 +29,7 @@ using namespace lima::Basler;
 SyncCtrlObj::SyncCtrlObj(Camera& cam) :
   m_cam(cam)
 {
+  m_cam.m_sync = this;
 }
 
 SyncCtrlObj::~SyncCtrlObj()
