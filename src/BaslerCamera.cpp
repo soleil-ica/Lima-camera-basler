@@ -1550,8 +1550,14 @@ void Camera::setSocketBufferSize(int sbs)
 //-----------------------------------------------------
 bool Camera::isGainAvailable() const
 {
-    //ACE2
-    return GenApi::IsAvailable(Camera_->Gain);
+    if (Camera_->GetSfncVersion() >= Sfnc_2_0_0)
+    {
+        return GenApi::IsAvailable(Camera_->Gain);
+    }
+    else
+    {
+        return GenApi::IsAvailable(Camera_->GainRaw);
+    }
 }
 
 //-----------------------------------------------------
