@@ -51,6 +51,12 @@ const static std::string IP_PREFIX = "ip://";
 const static std::string SN_PREFIX = "sn://";
 const static std::string UNAME_PREFIX = "uname://";
 
+static bool _is_pixel_format_available(Camera_t& camera, const char *format)
+{
+    GenApi::IEnumEntry *entry = camera.PixelFormat.GetEntryByName(format);
+    return entry && GenApi::IsAvailable(entry);
+}
+
 //---------------------------
 //- utility function
 //---------------------------
@@ -208,18 +214,33 @@ Camera::Camera(const std::string& camera_id,int packet_size,int receive_priority
 
         // Set the image format and AOI
         DEB_TRACE() << "Set the image format and AOI";
-        // basler model string last character codes for color (c) or monochrome (m)
         std::list<string> formatList;
-    #ifdef VIDEO_COLOR_DISABLED
+        GenApi::CEnumerationPtr pixelColorFilter(
+            Camera_->GetNodeMap().GetNode("PixelColorFilter"));
+        if (GenApi::IsReadable(pixelColorFilter))
         {
-            formatList.push_back(string("Mono16"));
-            formatList.push_back(string("Mono12"));
-            formatList.push_back(string("Mono8"));
-            m_color_flag = false;
+            // If the symbolic name of the current entry is not "None", it means the camera has a color filter
+            m_color_flag = pixelColorFilter->GetCurrentEntry()->GetSymbolic() != "None";
         }
-    #else
-        if (m_detector_model.find("gc") != std::string::npos ||
-            m_detector_model.find("uc") != std::string::npos)
+        else
+        {
+            // If the PixelColorFilter node is not readable, we determine the color capability
+            // by checking the availability of specific pixel formats.
+            m_color_flag =
+                _is_pixel_format_available(*Camera_, "BayerRG16") ||
+                _is_pixel_format_available(*Camera_, "BayerBG16") ||
+                _is_pixel_format_available(*Camera_, "BayerRG12") ||
+                _is_pixel_format_available(*Camera_, "BayerBG12") ||
+                _is_pixel_format_available(*Camera_, "YUV422Packed") ||
+                _is_pixel_format_available(*Camera_, "BayerRG8") ||
+                _is_pixel_format_available(*Camera_, "BayerBG8") ||
+                _is_pixel_format_available(*Camera_, "RGB8Packed") ||
+                _is_pixel_format_available(*Camera_, "BGR8Packed") ||
+                _is_pixel_format_available(*Camera_, "YUV411Packed") ||
+                _is_pixel_format_available(*Camera_, "YUV444Packed");
+        }
+
+        if (m_color_flag)
         {
             // The list Order here has sense, if supported, the first format in the list will be applied
             // as default one, and in case of color camera the default will defined the max buffer
@@ -233,16 +254,17 @@ Camera::Camera(const std::string& camera_id,int packet_size,int receive_priority
             formatList.push_back(string("YUV422Packed"));
             formatList.push_back(string("BayerRG8"));
             formatList.push_back(string("BayerBG8"));
-            m_color_flag = true;
+            formatList.push_back(string("RGB8Packed"));
+            formatList.push_back(string("BGR8Packed"));
+            formatList.push_back(string("YUV411Packed"));
+            formatList.push_back(string("YUV444Packed"));
         }
         else
         {
             formatList.push_back(string("Mono16"));
             formatList.push_back(string("Mono12"));
             formatList.push_back(string("Mono8"));
-            m_color_flag = false;
         }
-    #endif
 
         bool formatSetFlag = false;
         
@@ -304,7 +326,11 @@ Camera::Camera(const std::string& camera_id,int packet_size,int receive_priority
         // Get the image buffer size
         DEB_TRACE() << "Get the image buffer size";
         ImageSize_ = (size_t)(Camera_->PayloadSize.GetValue());
-            
+
+        // Configuring Pylon converter
+        m_converter.OutputPixelFormat  = Pylon::PixelType_RGB8packed;
+        m_converter.OutputBitAlignment = Pylon::OutputBitAlignment_MsbAligned;
+
         m_acq_thread = new _AcqThread(*this);
         m_acq_thread->start();
     }
@@ -530,10 +556,33 @@ void Camera::_AcqThread::threadFunction()
                     }
                     if (ptrGrabResult->GrabSucceeded()) 
                     {
-                        m_cam.m_video->callNewImage((char*)ptrGrabResult->GetBuffer(),
-                                        ptrGrabResult->GetWidth(),
-                                        ptrGrabResult->GetHeight(),
-                                        mode);
+                        const uint32_t sizeX = ptrGrabResult->GetWidth();
+                        const uint32_t sizeY = ptrGrabResult->GetHeight();
+
+                        if (mode == Y8 || mode == Y16)
+                        {
+                            m_cam.m_video->callNewImage(
+                                reinterpret_cast<char*>(ptrGrabResult->GetBuffer()),
+                                sizeX, sizeY,
+                                mode);
+                        }
+                        else
+                        {
+                            m_cam.m_converter.Convert(
+                                m_cam.m_converted,
+                                ptrGrabResult->GetBuffer(),
+                                ptrGrabResult->GetImageSize(),
+                                ptrGrabResult->GetPixelType(),
+                                sizeX, sizeY,
+                                ptrGrabResult->GetPaddingX(),
+                                Pylon::ImageOrientation_TopDown);
+
+                            m_cam.m_video->callNewImage(
+                                reinterpret_cast<char*>(m_cam.m_converted.GetBuffer()),
+                                sizeX, sizeY,
+                                RGB24);
+                        }
+
                         ++m_cam.m_image_number;
                     }
                 }
@@ -692,6 +741,9 @@ void Camera::setImageType(ImageType type)
                     break;
                 case Bpp16:
                     Camera_->PixelFormat.SetValue(PixelFormat_Mono16);
+                    break;
+                case Bpp24:
+                    Camera_->PixelFormat.SetValue(PixelFormat_BayerRG8);
                     break;
 
                 default:
@@ -1559,7 +1611,7 @@ bool Camera::isGainAvailable() const
 {
     if (Camera_->GetSfncVersion() >= Sfnc_2_0_0)
     {
-        return GenApi::IsAvailable(Camera_->Gain);
+    return GenApi::IsAvailable(Camera_->Gain);
     }
     else
     {
@@ -1633,7 +1685,7 @@ void Camera::getMaxThroughput(int& value)
 bool Camera::isCurrentThroughputAvailable() const
 {
     return GenApi::IsAvailable(Camera_->BslDeviceLinkCurrentThroughput);
-}
+}    
 
 //-----------------------------------------------------
 //

@@ -32,6 +32,8 @@
 
 #include <pylon/PylonIncludes.h>
 #include <pylon/gige/BaslerGigEDeviceInfo.h>
+#include <pylon/ImageFormatConverter.h>
+#include <pylon/PylonImage.h>
 #include <stdlib.h>
 #include <limits>
 #include "lima/HwMaxImageSizeCallback.h"
@@ -154,7 +156,7 @@ class LIBBASLER_API Camera
     void setInterPacketDelay(int ipd);
     void getInterPacketDelay(int& ipd);
     bool isMaxThroughputAvailable() const;
-    void getMaxThroughput(int& ipd);
+    void getMaxThroughput(int& ipd);    
     bool isCurrentThroughputAvailable() const;
     void getCurrentThroughput(int& ipd);
     void getBandwidthAssigned(int& ipd);
@@ -261,6 +263,9 @@ class LIBBASLER_API Camera
     VideoCtrlObj*		  m_video;
     SyncCtrlObj*		  m_sync;
     TrigMode			  m_trigger_mode;
+
+    Pylon::CImageFormatConverter m_converter;
+    Pylon::CPylonImage           m_converted;
 };
 } // namespace Basler
 } // namespace lima
